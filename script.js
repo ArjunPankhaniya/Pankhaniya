@@ -4,16 +4,7 @@ import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from
 import { getDatabase, ref, set, get, child, update, remove, push, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 
-const firebaseConfig = {
-    apiKey: "AIzaSyBElLKK-Sx4F9dq6lEaQGlAp1noQPTuz_w",
-    authDomain: "pankhaniyafamilytree.firebaseapp.com",
-    databaseURL: "https://pankhaniyafamilytree-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "pankhaniyafamilytree",
-    storageBucket: "pankhaniyafamilytree.firebasestorage.app",
-    messagingSenderId: "607589341613",
-    appId: "1:607589341613:web:d48292ee7970b055066924",
-    measurementId: "G-YNG2Q3MT6D"
-};
+import { firebaseConfig } from "./firebase-config.js";
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
