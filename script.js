@@ -6,6 +6,8 @@ import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://ww
 
 import { firebaseConfig } from "./firebase-config.js";
 
+console.log("Firebase config loaded:", firebaseConfig);
+
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
@@ -335,9 +337,23 @@ function buildTreeHierarchy(members) {
             member.spouse = tree[member.spouseOf];
         }
     }
-    
+
+    // 🔑 Age-wise (DOB) sorting of siblings
+    for (const id in tree) {
+        if (tree[id].children && tree[id].children.length > 1) {
+            tree[id].children.sort((a, b) => {
+                if (!a.dob && !b.dob) return 0;
+                if (!a.dob) return 1;   // jiska DOB missing hai woh right side chale jaye
+                if (!b.dob) return -1;
+                return new Date(a.dob) - new Date(b.dob); 
+                // 👆 pehle born (older) left side me
+            });
+        }
+    }
+
     return tree;
 }
+
 
 function renderTree(node, container, isUserLoggedIn) {
     const nodeWrapper = document.createElement("div");
@@ -353,9 +369,9 @@ function renderTree(node, container, isUserLoggedIn) {
 
     let statusBadge = '';
     if (node.status === 'Alive') {
-        statusBadge = `<span class="status-badge status-alive">Alive</span>`;
+        statusBadge = `<span class="status-badge status-alive">હયાત</span>`;
     } else if (node.status === 'Deceased') {
-        statusBadge = `<span class="status-badge status-deceased">Deceased</span>`;
+        statusBadge = `<span class="status-badge status-deceased">સ્વ.</span>`;
     }
 
     const cardContent = document.createElement('div');
@@ -413,13 +429,37 @@ function renderTree(node, container, isUserLoggedIn) {
 }
 
 function displaySelectedMember(member) {
+    // 🔹 Father (parent) find karo
+    let fatherName = "N/A";
+    if (member.parentId && allMembers[member.parentId]) {
+        fatherName = allMembers[member.parentId].name;
+    }
+
+    // 🔹 Children list banao (DOB wise sorted)
+    let childrenNames = "None";
+    let children = Object.values(allMembers).filter(m => m.parentId === member.id);
+
+    if (children.length > 0) {
+        children.sort((a, b) => {
+            if (!a.dob && !b.dob) return 0;
+            if (!a.dob) return 1;
+            if (!b.dob) return -1;
+            return new Date(a.dob) - new Date(b.dob); // bada pehle
+        });
+        childrenNames = children.map(c => c.name).join(", ");
+    }
+
     selectedMemberDetails.innerHTML = `
         <div class="flex flex-col items-center text-center gap-6">
-            ${member.photoURL ? `<img src="${member.photoURL}" class="w-32 h-32 rounded-full object-cover border-4 border-cyan-500 shadow-lg" alt="${member.name}">` : `<div class="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center text-6xl text-slate-600 border-4 border-cyan-500">👤</div>`}
+            ${member.photoURL ? 
+                `<img src="${member.photoURL}" class="w-32 h-32 rounded-full object-cover border-4 border-cyan-500 shadow-lg" alt="${member.name}">` : 
+                `<div class="w-32 h-32 rounded-full bg-slate-800 flex items-center justify-center text-6xl text-slate-600 border-4 border-cyan-500">👤</div>`}
+            
             <div class="flex flex-col items-center">
                 <h3 class="text-3xl font-bold text-white">${member.name}</h3>
                 <p class="text-lg font-medium text-cyan-400 mt-1">${member.relationship || "N/A"}</p>
             </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-left w-full">
                 <div class="flex items-center gap-3">
                     <i class="fas fa-calendar-alt text-cyan-400"></i>
@@ -449,10 +489,29 @@ function displaySelectedMember(member) {
                         <p class="font-medium text-slate-200">${member.contact || "N/A"}</p>
                     </div>
                 </div>
+
+                <!-- 👨‍👦 Father -->
+                <div class="flex items-center gap-3 sm:col-span-2">
+                    <i class="fas fa-male text-cyan-400"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Father</p>
+                        <p class="font-medium text-slate-200">${fatherName}</p>
+                    </div>
+                </div>
+
+                <!-- 👶 Children (sorted by DOB) -->
+                <div class="flex items-center gap-3 sm:col-span-2">
+                    <i class="fas fa-child text-cyan-400"></i>
+                    <div>
+                        <p class="text-xs text-slate-400">Children</p>
+                        <p class="font-medium text-slate-200">${childrenNames}</p>
+                    </div>
+                </div>
             </div>
         </div>
     `;
 }
+
 
 function toggleAllDetails(show) {
     document.querySelectorAll(".card-details").forEach(details => {
