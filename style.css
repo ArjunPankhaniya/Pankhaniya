@@ -1,0 +1,233 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Base UI Components */
+.panel {
+    background-color: #111827;
+}
+
+.modal {
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.modal-content {
+    background-color: #1f2937;
+    border: 1px solid #374151;
+}
+
+/* Buttons */
+.btn-primary {
+    @apply px-5 py-2 rounded-full text-white font-medium transition-transform duration-200 transform hover:scale-105;
+    background-color: #0ea5e9;
+    @apply hover:bg-cyan-600;
+}
+
+.btn-secondary {
+    @apply px-5 py-2 rounded-full text-white font-medium transition-transform duration-200 transform hover:scale-105;
+    background-color: #374151;
+    @apply hover:bg-slate-600;
+}
+
+.btn-icon {
+    @apply p-3 rounded-full text-slate-400 transition-colors duration-200;
+    background-color: #1f2937;
+    @apply hover:text-cyan-400;
+}
+
+/* Form Inputs */
+.input-field {
+    /* Updated text and placeholder colors for better contrast */
+    @apply w-full px-4 py-3 rounded-xl bg-slate-800 text-white placeholder-slate-400 border border-slate-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-colors;
+}
+
+.input-field-sm {
+    /* Updated text and placeholder colors for better contrast */
+    @apply px-3 py-2 rounded-lg bg-slate-800 text-white placeholder-slate-400 border border-slate-700;
+    @apply focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-colors;
+}
+/* You can also use this for specific fields if needed */
+.input-field::placeholder {
+    color: #94a3b8; /* A slate-400 equivalent for better visibility */
+}
+
+
+/* Empty State */
+.empty-state {
+    @apply flex flex-col items-center justify-center p-16 text-center;
+    background: #111827;
+    border-radius: 1.5rem;
+    border: 2px dashed #374151;
+}
+
+/* Tree Visualization */
+.tree-container {
+    display: flex;
+    justify-content: center;
+    overflow-x: auto;
+    padding: 3rem;
+    position: relative;
+    user-select: none;
+}
+
+.tree-node-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    padding-top: 1.5rem;
+}
+
+.tree-member-card {
+    background: #1f2937;
+    padding: 1rem;
+    border-radius: 1.25rem;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+    border: 2px solid transparent;
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out, border-color 0.3s ease-in-out;
+    cursor: pointer;
+    position: relative;
+    z-index: 10;
+    min-width: 180px;
+}
+
+.tree-member-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.6);
+}
+
+.tree-member-card.selected {
+    border-color: #22d3ee;
+    box-shadow: 0 0 20px rgba(34, 211, 238, 0.6);
+}
+
+.card-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.member-photo {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #0ea5e9;
+    transition: transform 0.3s ease-in-out;
+}
+
+.tree-member-card:hover .member-photo {
+    transform: scale(1.1);
+}
+
+.photo-placeholder {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #374151;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    color: #4b5563;
+    border: 3px solid #0ea5e9;
+}
+
+.member-name {
+    @apply font-semibold text-white mt-3 text-lg;
+}
+
+.member-meta {
+    @apply text-slate-400 text-sm;
+}
+
+.status-badge {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.status-alive {
+    background-color: #22c55e;
+    color: white;
+}
+
+.status-deceased {
+    background-color: #ef4444;
+    color: white;
+}
+
+/* Connecting Lines */
+.tree-node-wrapper::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    width: 2px;
+    height: 1.5rem;
+    background: #0ea5e9;
+}
+
+.tree-children-container {
+    display: flex;
+    justify-content: center;
+    gap: 3rem;
+    margin-top: 3rem;
+    position: relative;
+}
+
+.tree-children-container::before {
+    content: '';
+    position: absolute;
+    left: 50%;
+    top: -1.5rem;
+    width: 2px;
+    height: 1.5rem;
+    background: #0ea5e9;
+    transform: translateX(-50%);
+}
+
+.tree-children-container > .tree-node-wrapper::before {
+    height: 1.5rem;
+    top: 0;
+}
+
+.tree-children-container:not(:only-child) > .tree-node-wrapper:first-child::after {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    right: 50%;
+    height: 2px;
+    width: calc(100% + 3rem);
+    background: #0ea5e9;
+}
+
+.tree-children-container > .tree-node-wrapper:not(:first-child)::before {
+    content: '';
+    position: absolute;
+    top: 1.5rem;
+    left: 50%;
+    height: 2px;
+    width: calc(100% + 3rem);
+    background: #0ea5e9;
+}
+
+.tree-children-container::after {
+    content: '';
+    position: absolute;
+    top: -1.5rem;
+    left: 50%;
+    right: 50%;
+    height: 2px;
+    background: #0ea5e9;
+    transform: translateX(-50%);
+    width: calc(100% - 6rem);
+}
