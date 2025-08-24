@@ -256,70 +256,125 @@ function fetchAndDisplayTree() {
 
 function displayFamilyTree() {
     const tree = buildTreeHierarchy(allMembers);
-    const searchTerm = searchInput.value.toLowerCase();
-    
+    const searchTerm = (searchInput.value || "").trim().toLowerCase();
+
+    treeContainer.innerHTML = "";
+    const isUserLoggedIn = auth.currentUser !== null;   // ✅ pehle define
+
     if (Object.keys(tree).length === 0) {
         emptyTreeMessage.classList.remove("hidden");
-        treeContainer.innerHTML = "";
         return;
     }
-    
     emptyTreeMessage.classList.add("hidden");
-    
-    let membersToDisplay = Object.values(tree);
+
+    // 🔎 SEARCH MODE
     if (searchTerm) {
-        const foundMember = membersToDisplay.find(m => m.name.toLowerCase().includes(searchTerm));
-        if (foundMember) {
-            membersToDisplay = getBloodline(foundMember, tree);
+        const roots = Object.values(tree).filter(n => !n.parentId); // sirf real roots
+        let result = null;
+        for (const root of roots) {
+            const sub = searchTree(root, searchTerm);
+            if (sub) { result = sub; break; }
+        }
+        if (result) {
+            const highlightId = findFirstMatch(result, searchTerm); // ✅ actual matched member id
+            renderTree(result, treeContainer, isUserLoggedIn, highlightId);
+            return;
         } else {
-            treeContainer.innerHTML = `<p class="text-slate-500 text-center p-4">No matching members found.</p>`;
+            treeContainer.innerHTML = `<p class="text-slate-500 text-center p-4">No members found.</p>`;
             return;
         }
     }
 
-    treeContainer.innerHTML = "";
-    const isUserLoggedIn = auth.currentUser !== null;
-    
-    const rootMembers = membersToDisplay.filter(m => m.parentId === null || m.parentId === undefined);
-    rootMembers.forEach(root => renderTree(root, treeContainer, isUserLoggedIn));
+    // 🌳 NORMAL MODE
+    const membersToDisplay = Object.values(tree);
+    const rootMembers = membersToDisplay.filter(
+        m => !m.parentId || !membersToDisplay.some(x => x.id === m.parentId)
+    );
+    rootMembers.forEach(root =>
+        renderTree(root, treeContainer, isUserLoggedIn, null)
+    );
 }
 
-function getBloodline(member, tree) {
-    const bloodline = new Set();
-    
-    // Add the member and their children
-    function addMemberAndChildren(m) {
-        if (!m || bloodline.has(m.id)) return;
-        bloodline.add(m.id);
+
+// 🔍 Helper: first matching node ka id (pre-order)
+function findFirstMatch(node, query) {
+    if ((node.name || "").toLowerCase().includes(query)) return node.id;
+    if (node.children && node.children.length) {
+        for (const child of node.children) {
+            const found = findFirstMatch(child, query);
+            if (found) return found;
+        }
+    }
+    return null;
+}
+
+
+// 🔎 Search subtree builder (parents ko preserve karta hai)
+function searchTree(node, query) {
+    let match = (node.name || "").toLowerCase().includes(query);
+    const newNode = { ...node, children: [] };
+
+    if (node.children && node.children.length > 0) {
+        node.children.forEach(child => {
+            const res = searchTree(child, query);
+            if (res) {
+                newNode.children.push(res);
+                match = true; // descendant match → parent ko rakhna hai
+            }
+        });
+    }
+    return match ? newNode : null;
+}
+
+
+
+
+function getBloodline(memberId, tree) {
+    const result = {};
+    const visited = new Set();
+
+    function addWithChildren(m) {
+        if (!m || visited.has(m.id)) return;
+        visited.add(m.id);
+        result[m.id] = m;
+
         if (m.children) {
-            m.children.forEach(addMemberAndChildren);
+            m.children.forEach(c => addWithChildren(tree[c.id]));
         }
     }
-    addMemberAndChildren(member);
 
-    // Add ancestors
-    let currentMember = member;
-    while (currentMember.parentId) {
-        const parent = tree[currentMember.parentId];
-        if (parent) {
-            bloodline.add(parent.id);
-            currentMember = parent;
-        } else {
-            break;
+    function addAncestors(m) {
+        if (!m || visited.has(m.id)) return;
+        visited.add(m.id);
+        result[m.id] = m;
+
+        if (m.parentId && tree[m.parentId]) {
+            const parent = tree[m.parentId];
+
+            // ✅ siblings bhi include karna hai
+            parent.children.forEach(sibling => {
+                result[sibling.id] = sibling;
+                if (sibling.children) {
+                    sibling.children.forEach(c => addWithChildren(tree[c.id]));
+                }
+            });
+
+            addAncestors(parent); // 👆 parent → grandparent → root tak
         }
     }
-    
-    // Convert Set to an array of member objects
-    const bloodlineMembers = [];
-    bloodline.forEach(id => {
-        const m = tree[id];
-        if (m) {
-            bloodlineMembers.push(m);
-        }
-    });
 
-    return bloodlineMembers;
+    const startNode = tree[memberId];
+    if (startNode) {
+        addWithChildren(startNode);  // current + uske children
+        addAncestors(startNode);     // parent chain + siblings
+    }
+
+    return Object.values(result);
 }
+
+
+
+
 
 function buildTreeHierarchy(members) {
     const tree = {};
@@ -355,7 +410,7 @@ function buildTreeHierarchy(members) {
 }
 
 
-function renderTree(node, container, isUserLoggedIn) {
+function renderTree(node, container, isUserLoggedIn, highlightId = null) {
     const nodeWrapper = document.createElement("div");
     nodeWrapper.className = "tree-node-wrapper";
 
@@ -374,11 +429,16 @@ function renderTree(node, container, isUserLoggedIn) {
         statusBadge = `<span class="status-badge status-deceased">સ્વ.</span>`;
     }
 
+    let extraLabel = "";
+    if (highlightId && node.id === highlightId) {
+        extraLabel = `<span class="here-label bg-yellow-500 text-black px-2 py-0.5 rounded text-xs ml-2">You're Here</span>`;
+    }
+
     const cardContent = document.createElement('div');
     cardContent.className = 'card-content';
     cardContent.innerHTML = `
         ${photoHtml}
-        <h4 class="member-name">${node.name}</h4>
+        <h4 class="member-name">${node.name} ${extraLabel}</h4>
         <p class="member-meta">${node.meta || ""}</p>
         ${statusBadge}
     `;
@@ -423,7 +483,7 @@ function renderTree(node, container, isUserLoggedIn) {
         const childContainer = document.createElement("div");
         childContainer.className = "tree-children-container";
         nodeWrapper.appendChild(childContainer);
-        node.children.forEach(child => renderTree(child, childContainer, isUserLoggedIn));
+        node.children.forEach(child => renderTree(child, childContainer, isUserLoggedIn, highlightId));
     }
     return true;
 }
@@ -472,9 +532,12 @@ function displaySelectedMember(member) {
                     <i class="fas fa-briefcase text-cyan-400"></i>
                     <div>
                         <p class="text-xs text-slate-400">Status</p>
-                        <p class="font-medium text-slate-200">${member.status || "N/A"}</p>
+                        <p class="font-medium ${member.status === "Alive" ? "text-green-400" : "text-red-400"}">
+                            ${member.status === "Alive" ? "હયાત" : member.status === "Deceased" ? "સ્વ." : "N/A"}
+                        </p>
                     </div>
                 </div>
+
                 <div class="flex items-center gap-3">
                     <i class="fas fa-map-marker-alt text-cyan-400"></i>
                     <div>
@@ -523,11 +586,30 @@ function toggleAllDetails(show) {
     });
 }
 
-// ===== Export Function =====
+function cleanMemberForExport(member, tree) {
+    return {
+        id: member.id,
+        name: member.status === "Deceased" ? "સ્વ. " + member.name : member.name,
+        dob: member.dob || null,
+        dod: member.dod || null,
+        status: member.status || null,
+        city: member.city || null,
+        contact: member.contact || null,
+        relationship: member.relationship || null,
+        meta: member.meta || null,
+        photoURL: member.photoURL || null,
+        children: member.children ? member.children.map(child => cleanMemberForExport(child, tree)) : []
+    };
+}
+
 async function exportFamilyTree() {
     const tree = buildTreeHierarchy(allMembers);
     const rootMembers = Object.values(tree).filter(m => m.parentId === null);
-    const jsonString = JSON.stringify(rootMembers.length === 1 ? rootMembers[0] : rootMembers, null, 2);
+
+    // 🔑 Clean tree banani hai for export
+    const exportData = rootMembers.map(root => cleanMemberForExport(root, tree));
+
+    const jsonString = JSON.stringify(exportData.length === 1 ? exportData[0] : exportData, null, 2);
     const blob = new Blob([jsonString], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
