@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Pankhaniya Family Tree</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" integrity="sha512-SnH5WK+bZxgPHs44uWIX+LLJAJ9/2PkPKZ5QiAj6Ta86w+fsb2TkcmfRyVX3pBnMFcV7oQPJkl9QevSCWr3W6A==" crossorigin="anonymous">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="bg-slate-950 text-slate-200 font-inter">
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <header class="flex flex-col sm:flex-row justify-between items-center mb-10 p-6 rounded-2xl bg-slate-900 shadow-xl">
+            <div class="text-center sm:text-left">
+                <h1 class="text-4xl font-bold text-cyan-400">Pankhaniya Family Tree</h1>
+                <p class="text-slate-400 mt-2">Explore and manage your family history.</p>
+            </div>
+            <div id="authContainer" class="mt-6 sm:mt-0 flex gap-2 items-center">
+                <div id="adminControls" class="flex gap-2 hidden">
+                    <button id="addRootBtn" class="btn-primary"><i class="fas fa-plus"></i> Add Root</button>
+                    <button id="exportBtn" class="btn-secondary"><i class="fas fa-download"></i> Export</button>
+                    <button id="logoutBtn" class="btn-secondary"><i class="fas fa-sign-out-alt"></i> Logout</button>
+                </div>
+                <button id="authToggleBtn" class="btn-secondary transition-colors"><i class="fas fa-user-lock"></i> Admin Login</button>
+            </div>
+        </header>
+
+        <div id="mainContent" class="hidden">
+            <div id="loginContainer" class="panel w-full max-w-sm mx-auto p-8 rounded-xl text-center mb-10 hidden">
+                <h2 class="text-2xl font-semibold text-white mb-6">Admin Login</h2>
+                <form id="loginForm" class="flex flex-col gap-4">
+                    <input type="email" id="email" placeholder="Email" class="input-field" required />
+                    <input type="password" id="password" placeholder="Password" class="input-field" required />
+                    <button type="submit" class="btn-primary w-full"><i class="fas fa-sign-in-alt"></i> Login</button>
+                </form>
+                <p id="loginStatus" class="mt-4 text-sm text-red-400"></p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div class="panel p-8 rounded-2xl lg:col-span-2">
+                    <div class="flex flex-col sm:flex-row justify-between items-center mb-8 gap-4">
+                        <h2 class="text-2xl font-semibold text-white">Family Tree</h2>
+                        <div class="w-full sm:w-auto flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="searchInput" placeholder="Search by name..." class="input-field-sm" />
+                            <button id="expandAllBtn" class="btn-icon"><i class="fas fa-expand-arrows-alt"></i></button>
+                            <button id="collapseAllBtn" class="btn-icon"><i class="fas fa-compress-arrows-alt"></i></button>
+                        </div>
+                    </div>
+                    <div id="treeContainer" class="tree-container"></div>
+                    <div id="emptyTreeMessage" class="empty-state">
+                        <i class="fas fa-leaf fa-5x text-cyan-400 mb-6 animate-pulse"></i>
+                        <h3 class="text-xl font-semibold text-slate-300">No family members found.</h3>
+                        <p class="text-slate-500 mt-2">Admin, click 'Add Root' to start the family tree.</p>
+                    </div>
+                </div>
+    
+                <div class="panel p-8 rounded-2xl lg:col-span-1 flex flex-col gap-8">
+                    <div>
+                        <h2 class="text-2xl font-semibold text-white mb-6">Selected Member</h2>
+                        <div id="selectedMemberDetails" class="min-h-[200px] flex items-center justify-center text-center">
+                            <div class="text-slate-500">
+                                <i class="fas fa-user-circle fa-4x mb-4"></i>
+                                <p>Click a person to view their profile.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="modal" class="modal fixed inset-0 flex justify-center items-center z-50 p-4 hidden">
+        <div class="modal-content rounded-xl shadow-2xl max-w-lg w-full p-8 text-center transition-transform duration-300 ease-in-out scale-95">
+            <h3 id="modalTitle" class="text-2xl font-bold mb-6 text-white"></h3>
+            <form id="memberForm" class="flex flex-col gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" id="name" name="name" class="input-field" placeholder="Full Name" required />
+                    <input type="text" id="meta" name="meta" class="input-field" placeholder="Birth Year (e.g., 1982)" />
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="date" id="dob" name="dob" class="input-field" placeholder="Date of Birth" />
+                    <select id="status" name="status" class="input-field" required>
+                        <option value="" disabled selected>Select Status</option>
+                        <option value="Alive">Alive</option>
+                        <option value="Deceased">Deceased</option>
+                    </select>
+                </div>
+                <input type="date" id="dod" name="dod" class="input-field hidden" placeholder="Date of Death" />
+                <input type="text" id="city" name="city" class="input-field" placeholder="City" />
+                <input type="text" id="contact" name="contact" class="input-field" placeholder="Contact Number" />
+                <div class="text-left">
+                    <label for="photo" class="block text-slate-400 mb-2">Profile Photo:</label>
+                    <input type="file" id="photo" name="photo" class="text-slate-200" accept="image/*" />
+                </div>
+                <select id="relationshipType" class="input-field hidden">
+                    <option value="child" selected>Child</option>
+                    <option value="spouse">Spouse</option>
+                    <option value="sibling">Sibling</option>
+                </select>
+                <div class="flex justify-end gap-2 mt-6">
+                    <button type="button" id="modalCancelBtn" class="btn-secondary"><i class="fas fa-times"></i> Cancel</button>
+                    <button type="submit" id="modalConfirmBtn" class="btn-primary"><i class="fas fa-save"></i> Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script type="module" src="script.js"></script>
+</body>
+</html>
