@@ -6,7 +6,7 @@ import { getStorage, ref as sRef, uploadBytes, getDownloadURL } from "https://ww
 
 import { firebaseConfig } from "./firebase-config.js";
 
-console.log("Firebase config loaded:", firebaseConfig);
+console.log("Firebase config loaded:");
 
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -429,10 +429,7 @@ function renderTree(node, container, isUserLoggedIn, highlightId = null) {
     const card = document.createElement("div");
     card.className = "tree-member-card";
     card.dataset.id = node.id;
-        // ✅ Ye line CSS me add karo
-    nodeWrapper.style.display = "flex";
-    nodeWrapper.style.flexDirection = "column";
-    nodeWrapper.style.alignItems = "center";  // child nodes center me
+    
     
     let photoHtml = node.photoURL ? 
         `<img src="${node.photoURL}" class="member-photo" alt="${node.name}">` : 
