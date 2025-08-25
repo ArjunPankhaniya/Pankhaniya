@@ -259,7 +259,7 @@ function displayFamilyTree() {
     const searchTerm = (searchInput.value || "").trim().toLowerCase();
 
     treeContainer.innerHTML = "";
-    const isUserLoggedIn = auth.currentUser !== null;   // ✅ pehle define
+    const isUserLoggedIn = auth.currentUser !== null;
 
     if (Object.keys(tree).length === 0) {
         emptyTreeMessage.classList.remove("hidden");
@@ -269,15 +269,21 @@ function displayFamilyTree() {
 
     // 🔎 SEARCH MODE
     if (searchTerm) {
-        const roots = Object.values(tree).filter(n => !n.parentId); // sirf real roots
+        const roots = Object.values(tree).filter(n => !n.parentId);
         let result = null;
         for (const root of roots) {
             const sub = searchTree(root, searchTerm);
             if (sub) { result = sub; break; }
         }
         if (result) {
-            const highlightId = findFirstMatch(result, searchTerm); // ✅ actual matched member id
+            const highlightId = findFirstMatch(result, searchTerm);
             renderTree(result, treeContainer, isUserLoggedIn, highlightId);
+
+            // ✅ auto-center on search result
+            setTimeout(() => {
+                treeContainer.scrollLeft = (treeContainer.scrollWidth - treeContainer.clientWidth) / 2;
+            }, 100);
+
             return;
         } else {
             treeContainer.innerHTML = `<p class="text-slate-500 text-center p-4">No members found.</p>`;
@@ -293,7 +299,13 @@ function displayFamilyTree() {
     rootMembers.forEach(root =>
         renderTree(root, treeContainer, isUserLoggedIn, null)
     );
+
+    // ✅ auto-center after full render
+    setTimeout(() => {
+        treeContainer.scrollLeft = (treeContainer.scrollWidth - treeContainer.clientWidth) / 2;
+    }, 100);
 }
+
 
 
 // 🔍 Helper: first matching node ka id (pre-order)
@@ -417,6 +429,10 @@ function renderTree(node, container, isUserLoggedIn, highlightId = null) {
     const card = document.createElement("div");
     card.className = "tree-member-card";
     card.dataset.id = node.id;
+        // ✅ Ye line CSS me add karo
+    nodeWrapper.style.display = "flex";
+    nodeWrapper.style.flexDirection = "column";
+    nodeWrapper.style.alignItems = "center";  // child nodes center me
     
     let photoHtml = node.photoURL ? 
         `<img src="${node.photoURL}" class="member-photo" alt="${node.name}">` : 

@@ -41,21 +41,18 @@ body {
 
 /* Form Inputs */
 .input-field {
-    /* Updated text and placeholder colors for better contrast */
     @apply w-full px-4 py-3 rounded-xl bg-slate-800 text-white placeholder-slate-400 border border-slate-700;
     @apply focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-colors;
 }
 
 .input-field-sm {
-    /* Updated text and placeholder colors for better contrast */
     @apply px-3 py-2 rounded-lg bg-slate-800 text-white placeholder-slate-400 border border-slate-700;
     @apply focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 transition-colors;
 }
-/* You can also use this for specific fields if needed */
-.input-field::placeholder {
-    color: #94a3b8; /* A slate-400 equivalent for better visibility */
-}
 
+.input-field::placeholder {
+    color: #94a3b8;
+}
 
 /* Empty State */
 .empty-state {
@@ -68,8 +65,13 @@ body {
 /* Tree Visualization */
 .tree-container {
     display: flex;
-    justify-content: center;
+    justify-content: flex-start; /* left aligned */
+    align-items: flex-start;
+    transform: scale(0.8);   /* ✅ 80% size */
+    transform-origin: top center; /* ✅ zoom का anchor ऊपर बीच में */
     overflow-x: auto;
+    overflow-y: auto;
+    white-space: nowrap;
     padding: 3rem;
     position: relative;
     user-select: none;
@@ -166,68 +168,87 @@ body {
     color: white;
 }
 
-/* Connecting Lines */
+/* ✅ FIXED Connecting Lines */
+
+/* Parent → Child vertical line */
 .tree-node-wrapper::before {
     content: '';
     position: absolute;
     top: 0;
+    left: 50%;
     width: 2px;
     height: 1.5rem;
     background: #0ea5e9;
+    transform: translateX(-50%);
 }
 
+/* ✅ Parent → Children vertical main connector */
+.tree-node-wrapper.has-children::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    width: 2px;
+    height: 2rem;
+    background: #0ea5e9;
+    transform: translateX(-50%);
+}
+
+/* ✅ Children wrapper will only connect siblings of the SAME parent */
 .tree-children-container {
     display: flex;
     justify-content: center;
     gap: 3rem;
-    margin-top: 3rem;
+    margin-top: 2rem;
     position: relative;
 }
 
+/* ✅ Draw horizontal line only within that parent's children */
 .tree-children-container::before {
     content: '';
     position: absolute;
-    left: 50%;
-    top: -1.5rem;
-    width: 2px;
-    height: 1.5rem;
-    background: #0ea5e9;
-    transform: translateX(-50%);
-}
-
-.tree-children-container > .tree-node-wrapper::before {
-    height: 1.5rem;
     top: 0;
-}
-
-.tree-children-container:not(:only-child) > .tree-node-wrapper:first-child::after {
-    content: '';
-    position: absolute;
-    top: 1.5rem;
-    right: 50%;
-    height: 2px;
-    width: calc(100% + 3rem);
+    left: calc(0% + 2.5rem);   /* ✅ पहले child तक */
+    right: calc(0% + 2.5rem);  /* ✅ आखिरी child तक */
+    height: 3px;
     background: #0ea5e9;
 }
 
-.tree-children-container > .tree-node-wrapper:not(:first-child)::before {
+/* ✅ Each child short vertical line */
+.tree-children-container > .tree-node-wrapper::before {
     content: '';
     position: absolute;
-    top: 1.5rem;
+    bottom:  -2rem;
     left: 50%;
-    height: 2px;
-    width: calc(100% + 3rem);
-    background: #0ea5e9;
-}
-
-.tree-children-container::after {
-    content: '';
-    position: absolute;
-    top: -1.5rem;
-    left: 50%;
-    right: 50%;
-    height: 2px;
+    width: 2px;
+    height: 2rem;
     background: #0ea5e9;
     transform: translateX(-50%);
-    width: calc(100% - 6rem);
+}
+
+
+
+/* "Here" badge */
+.here-badge {
+  background: #22c55e;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: bold;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  margin-top: 6px;
+  display: inline-block;
+  box-shadow: 0 0 6px rgba(34, 197, 94, 0.7);
+  animation: pulseHere 1.5s infinite;
+}
+
+@keyframes pulseHere {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
 }
