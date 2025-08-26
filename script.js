@@ -291,7 +291,7 @@ function displayFamilyTree() {
         }
     }
 
-    // 🌳 NORMAL MODE
+    // 🌳 NORMAL MODE (render full tree)
     const membersToDisplay = Object.values(tree);
     const rootMembers = membersToDisplay.filter(
         m => !m.parentId || !membersToDisplay.some(x => x.id === m.parentId)
@@ -300,11 +300,30 @@ function displayFamilyTree() {
         renderTree(root, treeContainer, isUserLoggedIn, null)
     );
 
-    // ✅ auto-center after full render
+    // ✅ After rendering full tree, auto-scroll to fixed member
+    const FIXED_MEMBER_ID = "-OYQLmm-7X_XaXuAwohP";
     setTimeout(() => {
-        treeContainer.scrollLeft = (treeContainer.scrollWidth - treeContainer.clientWidth) / 2;
-    }, 100);
+        const targetEl = document.getElementById(`member-${FIXED_MEMBER_ID}`);
+        if (targetEl) {
+            targetEl.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+                inline: "center"
+            });
+        }
+    }, 300);
 }
+
+function centerTree() {
+  const container = document.getElementById("treeContainer");
+  if (!container) return;
+
+  container.scrollLeft = (container.scrollWidth - container.clientWidth) / 2;
+  container.scrollTop = (container.scrollHeight - container.clientHeight) / 3; 
+}
+
+// Call after rendering tree
+setTimeout(centerTree, 500);
 
 
 
@@ -428,6 +447,7 @@ function renderTree(node, container, isUserLoggedIn, highlightId = null) {
 
     const card = document.createElement("div");
     card.className = "tree-member-card";
+    card.id = `member-${node.id}`;
     card.dataset.id = node.id;
     
     
@@ -586,6 +606,13 @@ function displaySelectedMember(member) {
             </div>
         </div>
     `;
+    selectedMemberDetails.scrollIntoView({
+    behavior: "smooth",
+    block: "start"   // ya "nearest"
+    });
+    selectedMemberDetails.classList.add("highlight-flash");
+    setTimeout(() => selectedMemberDetails.classList.remove("highlight-flash"), 1000);
+
 }
 
 

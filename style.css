@@ -9,6 +9,14 @@ body {
     background-color: #111827;
 }
 
+.main-layout {
+    display: grid;
+    grid-template-columns: 2fr 1fr; /* 2/3rd tree, 1/3rd details */
+    gap: 1rem; /* dono ke beech gap kam */
+    padding: 0.5rem 1rem; /* side gap kam */
+    height: 100vh; /* full screen height */
+}
+
 .modal {
     background-color: rgba(0, 0, 0, 0.8);
     backdrop-filter: blur(8px);
@@ -76,17 +84,82 @@ body {
 /* Tree Visualization */
 .tree-container {
     display: flex;
+    width: 100%;
     justify-content: flex-start; /* left aligned */
     align-items: flex-start;
-    transform: scale(0.8);   /* ✅ 80% size */
-    transform-origin: top center; /* ✅ zoom का anchor ऊपर बीच में */
     overflow-x: auto;
     overflow-y: auto;
     white-space: nowrap;
-    padding: 3rem;
+    padding: 1rem;
     position: relative;
+    height: auto;
     user-select: none;
 }
+
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr; /* ek column */
+  }
+
+  .details-panel {
+    margin-top: 1rem; /* neeche shift */
+  }
+}
+
+@media (max-width: 768px) {
+  .tree-container {
+    padding: 0rem;
+    flex-direction: column;
+    overflow-x: scroll;
+  }
+
+  .tree-children-container {
+    gap: 1rem;
+      /* ✅ children vertically stack ho jayenge */
+  }
+
+  .tree-member-card {
+    min-width: 140px;
+    font-size: 0.9rem;
+    padding: 0.75rem;
+  }
+
+  .member-photo {
+    width: 48px;
+    height: 48px;
+  }
+  
+
+}
+
+.zoom-controls {
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    }
+
+    .zoom-controls button {
+    background: #0ea5e9;
+    color: white;
+    border-radius: 8px;
+    padding: 8px 12px;
+    }
+
+
+@keyframes highlight {
+  from { background-color: rgba(34, 211, 238, 0.3); }
+  to { background-color: transparent; }
+}
+.highlight-flash {
+  animation: highlight 1s ease;
+}
+
+
+
 
 .tree-node-wrapper {
     display: flex;
@@ -106,7 +179,9 @@ body {
     cursor: pointer;
     position: relative;
     z-index: 10;
-    min-width: 180px;
+    min-width: 160px;
+    max-width: 90vw;
+    word-wrap: break-word;
 }
 
 .tree-member-card:hover {
@@ -209,7 +284,7 @@ body {
 .tree-children-container {
     display: flex;
     justify-content: center;
-    gap: 3rem;
+    gap: 2rem;
     margin-top: 2rem;
     position: relative;
 }
